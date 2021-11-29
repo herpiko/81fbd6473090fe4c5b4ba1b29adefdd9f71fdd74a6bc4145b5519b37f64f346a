@@ -6,7 +6,9 @@ import hashlib
 import codecs
 import gc
 
-BUFFER_SIZE = 65536 
+BUFFER_SIZE = 65536  # 64kb for each chunk
+
+# To help identify the text file
 TEXTFILES = (
     codecs.BOM_UTF16_BE,
     codecs.BOM_UTF16_LE,
@@ -28,8 +30,8 @@ def sha256_hash(file_path):
                 if not chunk:
                     break
                 if is_init:
-                        # Find out whether this is a binary or not
-                    # by using text bom identifier
+                    # Find out whether this is a binary or not
+                    # by using text bom patterns
                     is_binary = b'\0' in chunk and \
                             not any(chunk.startswith(bom) for bom in TEXTFILES)
                     is_init = False
@@ -42,17 +44,17 @@ def sha256_hash(file_path):
 
     hashed = sha256.hexdigest()
     content = ""
-    try:
-        if is_binary:
-            # Printing out the binary content is not cool to look at, 
-            # use hash as content/indentifier instead.
-            # We can keep the memory footprint small this way.
-            content = hashed
-        else:
+    if is_binary:
+        # Printing out the binary content is not cool to look at, 
+        # use hash as content/indentifier instead.
+        # We can keep the memory footprint small this way.
+        content = hashed
+    else:
+        try:
             content = data.decode()
-    except:
-        # Fallback to hash
-        content = hashed 
+        except:
+            # Fallback to hash
+            content = hashed 
 
     # Keep memory clean in case it's a huge file
     del sha256
@@ -90,7 +92,7 @@ if __name__ == '__main__':
 
     target_path = sys.argv[1]
 
-    # In case we are forgot to add ./ for a dir in our current workdir
+    # In case we forgot to add ./ for a dir in our current workdir
     if not (target_path.startswith("/") or target_path.startswith(".")):
         target_path = "./" + target_path
 
